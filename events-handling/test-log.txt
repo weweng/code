@@ -1,0 +1,73 @@
+weng@weng-u1604:$ gcc -I/usr/local/include -L/usr/local/lib   -o events-mgmnt events-mgmnt.c   -levent
+weng@weng-u1604:$ ./events-mgmnttimeout_cb called at 1596489737: 5.004 seconds elapsed.
+timeout_cb called at 1596489742: 5.002 seconds elapsed.
+timeout_cb called at 1596489747: 4.998 seconds elapsed.
+timeout_cb called at 1596489752: 5.003 seconds elapsed.
+file_read_cb called with fd: 6, event: 2, arg: 0x1d0d4c0
+Read: hello 
+
+timeout_cb called at 1596489757: 5.000 seconds elapsed.
+timeout_cb called at 1596489762: 5.000 seconds elapsed.
+
+ handling socket event: accept and close it! 
+timeout_cb called at 1596489767: 4.996 seconds elapsed.
+
+ handling socket event: accept and close it! 
+timeout_cb called at 1596489772: 5.004 seconds elapsed.
+timeout_cb called at 1596489777: 4.998 seconds elapsed.
+file_read_cb called with fd: 6, event: 2, arg: 0x1d0d4c0
+Read: world 
+
+timeout_cb called at 1596489782: 4.999 seconds elapsed.
+timeout_cb called at 1596489787: 5.000 seconds elapsed.
+
+ handling inotify event: 
+
+          inotify event mask:0x200: 
+The file test was deleted.
+timeout_cb called at 1596489792: 4.999 seconds elapsed.
+
+ handling inotify event: 
+
+          inotify event mask:0x100: 
+The file test was created.
+
+          inotify event mask:0x2: 
+The file test was modified.
+timeout_cb called at 1596489797: 5.000 seconds elapsed.
+timeout_cb called at 1596489802: 5.002 seconds elapsed.
+
+ handling inotify event: 
+
+          inotify event mask:0x2: 
+The file test was modified.
+timeout_cb called at 1596489807: 4.998 seconds elapsed.
+
+ handling inotify event: 
+
+          inotify event mask:0x2: 
+The file test was modified.
+^C
+ SIGINT received, exit, bye! 
+weng@weng-u1604:/mnt/vb-win7-share/github/code/events-handling$ 
+
+
+===========================================================
+weng@weng-u1604:~$ echo "hello " > /tmp/event.fifo 
+weng@weng-u1604:~$ telnet localhost 5678
+Trying 127.0.0.1...
+Connected to localhost.
+Escape character is '^]'.
+Connection closed by foreign host.
+weng@weng-u1604:~$ telnet localhost 5678
+Trying 127.0.0.1...
+Connected to localhost.
+Escape character is '^]'.
+Connection closed by foreign host.
+weng@weng-u1604:~$ echo "world " > /tmp/event.fifo 
+weng@weng-u1604:~$ rm /tmp/my-prog/test
+weng@weng-u1604:~$ echo 1 > /tmp/my-prog/test
+weng@weng-u1604:~$ echo 2 >> /tmp/my-prog/test
+weng@weng-u1604:~$ echo 2 >> /tmp/my-prog/test
+weng@weng-u1604:~$ 
+
