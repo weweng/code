@@ -1,5 +1,5 @@
 /*
- * Using raw socket o sniff trafiic from a give ethernet interface.
+ * Using raw socket o sniff L2 traffic from a give ethernet interface.
  * Usage:
  *
  *  sniffer eth0
