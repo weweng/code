@@ -1,5 +1,8 @@
-; emacs setup
-; emacs -q -l emacs-init.el
+;; emacs configuratin file
+;; it can be save into ~/.emacs file with following:
+;;    (load-file "emacs-init.el")
+;; Or invoke it manually using "-q -l emacs-init.el" like below:
+;; xterm# emacs -q -l emacs-init.el
 
 (setq minibuffer-max-depth nil)
 (setq blink-matching-paren t)
