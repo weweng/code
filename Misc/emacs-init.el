@@ -181,9 +181,9 @@
 (global-set-key (quote [f8])  'match-paren)
 (global-set-key (quote [f9])  'java-mode)
 (global-set-key (quote [f10])  'c-mode)
-(global-set-key (quote [f11])  'vvb-mode)
+;;(global-set-key (quote [f11])  'vvb-mode)
 ;;(global-set-key (quote [f11])  'makefile-mode)
-(global-set-key (quote [f12])  'blank-mode)
+(global-set-key (quote [f12])  'whitespace-mode)
 
 (custom-set-variables
   ;; custom-set-variables was added by Custom.
