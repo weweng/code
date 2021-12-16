@@ -1,0 +1,134 @@
+diff --git a/arch/arm64/kernel/syscall.c b/arch/arm64/kernel/syscall.c
+index 5f0c04863d2c..725af1959ce3 100644
+--- a/arch/arm64/kernel/syscall.c
++++ b/arch/arm64/kernel/syscall.c
+@@ -6,6 +6,7 @@
+ #include <linux/nospec.h>
+ #include <linux/ptrace.h>
+ #include <linux/syscalls.h>
++#include <linux/kernel_stat.h>
+
+ #include <asm/daifflags.h>
+ #include <asm/debug-monitors.h>
+@@ -44,6 +45,7 @@ static void invoke_syscall(struct pt_regs *regs, unsigned int scno,
+
+    if (scno < sc_nr) {
+        syscall_fn_t syscall_fn;
++       syscall_stat[scno]++;
+        syscall_fn = syscall_table[array_index_nospec(scno, sc_nr)];
+        ret = __invoke_syscall(regs, syscall_fn);
+    } else {
+diff --git a/arch/x86/entry/common.c b/arch/x86/entry/common.c
+index 870efeec8bda..b40faf1eae37 100644
+--- a/arch/x86/entry/common.c
++++ b/arch/x86/entry/common.c
+@@ -19,6 +19,7 @@
+ #include <linux/nospec.h>
+ #include <linux/syscalls.h>
+ #include <linux/uaccess.h>
++#include <linux/kernel_stat.h>
+
+ #ifdef CONFIG_XEN_PV
+ #include <xen/xen-ops.h>
+@@ -43,12 +44,14 @@ __visible noinstr void do_syscall_64(unsigned long nr, struct pt_regs *regs)
+    instrumentation_begin();
+    if (likely(nr < NR_syscalls)) {
+        nr = array_index_nospec(nr, NR_syscalls);
++       syscall_stat[nr]++;
+        regs->ax = sys_call_table[nr](regs);
+ #ifdef CONFIG_X86_X32_ABI
+    } else if (likely((nr & __X32_SYSCALL_BIT) &&
+              (nr & ~__X32_SYSCALL_BIT) < X32_NR_syscalls)) {
+        nr = array_index_nospec(nr & ~__X32_SYSCALL_BIT,
+                    X32_NR_syscalls);
++       syscall_stat[nr]++;
+        regs->ax = x32_sys_call_table[nr](regs);
+ #endif
+    }
+@@ -75,6 +78,7 @@ static __always_inline void do_syscall_32_irqs_on(struct pt_regs *regs,
+    if (likely(nr < IA32_NR_syscalls)) {
+        instrumentation_begin();
+        nr = array_index_nospec(nr, IA32_NR_syscalls);
++       syscall_stat[nr]++;
+        regs->ax = ia32_sys_call_table[nr](regs);
+        instrumentation_end();
+    }
+diff --git a/fs/proc/Makefile b/fs/proc/Makefile
+index bd08616ed8ba..e8cd653890b9 100644
+--- a/fs/proc/Makefile
++++ b/fs/proc/Makefile
+@@ -27,6 +27,7 @@ proc-y    += softirqs.o
+ proc-y += namespaces.o
+ proc-y += self.o
+ proc-y += thread_self.o
++proc-y += syscall_stat.o
+ proc-$(CONFIG_PROC_SYSCTL) += proc_sysctl.o
+ proc-$(CONFIG_NET)     += proc_net.o
+ proc-$(CONFIG_PROC_KCORE)  += kcore.o
+diff --git a/fs/proc/syscall_stat.c b/fs/proc/syscall_stat.c
+new file mode 100644
+index 000000000000..ff7f530a6eb9
+--- /dev/null
++++ b/fs/proc/syscall_stat.c
+@@ -0,0 +1,25 @@
++#include <linux/fs.h>
++#include <linux/init.h>
++#include <linux/proc_fs.h>
++#include <linux/seq_file.h>
++#include <linux/kernel_stat.h>
++
++static int syscall_stat_proc_show(struct seq_file *m, void *v)
++{
++       int i = 0;
++
++       seq_printf(m, "Refer to /usr/include/asm/unistd*.h file for definition.\n");
++       seq_printf(m, "Syscall#: \t Counter \n");
++       for (i=0; i<NR_syscalls; i++)
++           seq_printf(m, "%d: \t\t %lu\n", i, syscall_stat[i]);
++  
++       return 0;
++}
++
++static int __init proc_syscall_stat_init(void)
++{
++   proc_create_single("syscallstat", 0, NULL, syscall_stat_proc_show);
++   return 0;
++}
++
++fs_initcall(proc_syscall_stat_init);
+diff --git a/include/linux/kernel_stat.h b/include/linux/kernel_stat.h
+index 89f0745c096d..31927fa5c1d0 100644
+--- a/include/linux/kernel_stat.h
++++ b/include/linux/kernel_stat.h
+@@ -9,6 +9,7 @@
+ #include <linux/interrupt.h>
+ #include <linux/sched.h>
+ #include <linux/vtime.h>
++#include <asm/unistd.h>
+ #include <asm/irq.h>
+
+ /*
+@@ -115,4 +116,8 @@ extern void account_process_tick(struct task_struct *, int user);
+
+ extern void account_idle_ticks(unsigned long ticks);
+
++/* Array to hold syscall stats */
++extern long syscall_stat[NR_syscalls];
++
++
+ #endif /* _LINUX_KERNEL_STAT_H */
+diff --git a/kernel/sys.c b/kernel/sys.c
+index ab6c409b1159..d68ed0244729 100644
+--- a/kernel/sys.c
++++ b/kernel/sys.c
+@@ -148,6 +148,9 @@ int fs_overflowgid = DEFAULT_FS_OVERFLOWGID;
+ EXPORT_SYMBOL(fs_overflowuid);
+ EXPORT_SYMBOL(fs_overflowgid);
+
++long syscall_stat[NR_syscalls] = { 0 };
++EXPORT_SYMBOL(syscall_stat);
++
+ /*
+  * Returns true if current's euid is same as p's uid or euid,
+  * or has CAP_SYS_NICE to p's user_ns.
+syscall-stat-diff.txt                                                  
